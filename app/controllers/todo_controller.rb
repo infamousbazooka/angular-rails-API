@@ -5,17 +5,28 @@ class TodoController < ApplicationController
   end
 
   def create
-    @todo = Todo.create(:title => params[:title], :status => false)
-    @todos = Todo.all
-    render json: @todos
+    @todo = Todo.new(todo_params)
+    @todo.status = false
+    if @todo.save
+      render json: @todo
+    else
+      return 0
+    end
   end
 
   def update
     @todo = Todo.find_by(:id => params[:id])
+    if !@todo
+      output = {'status' => 'not found'}.to_json
+      render :json => output
+      return
+    end
     @todo.status = !@todo.status
-    @todo.save
-    @todos = Todo.all
-    render json: @todos
+    if @todo.save
+      render json: @todo
+    else
+      return 0
+    end
   end
 
   def destroy
@@ -25,8 +36,15 @@ class TodoController < ApplicationController
       render :json => output
       return
     end
-    @todo.destroy
-    @todos = Todo.all
-    render json: @todos
+    if @todo.destroy
+      render json: @todo
+    else
+      return 0
+    end
   end
+
+  private
+    def todo_params
+      params.require(:todo).permit(:title)
+    end
 end
